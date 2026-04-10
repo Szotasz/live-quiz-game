@@ -80,7 +80,6 @@ export function useGameChannel(gameId: string, handlers: GameHandlers) {
         }
       }
     })
-    channelRef.current = channel
 
     return () => {
       supabase.removeChannel(channel)

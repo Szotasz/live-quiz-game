@@ -37,8 +37,8 @@ function JoinForm() {
         return
       }
 
-      const playerId = await joinGame(game.id, name.trim(), emoji)
-      sessionStorage.setItem('playerId', playerId)
+      const player = await joinGame(game.id, name.trim(), emoji)
+      sessionStorage.setItem('playerId', player.id)
       router.push(`/play/${game.id}`)
     } catch {
       setError('Failed to join game. Please try again.')
