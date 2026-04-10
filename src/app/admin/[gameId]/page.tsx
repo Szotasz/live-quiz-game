@@ -26,10 +26,10 @@ interface Player {
 }
 
 interface LeaderboardEntry {
-  player_id: string
-  player_name: string
-  player_emoji: string
-  total_score: number
+  id: string
+  name: string
+  emoji: string
+  score: number
 }
 
 interface AnswerStat {
@@ -380,7 +380,7 @@ export default function AdminPage() {
           <div className="flex flex-col gap-2">
             {leaderboard.slice(0, 5).map((entry, idx) => (
               <motion.div
-                key={entry.player_id}
+                key={entry.id}
                 className="flex items-center gap-3 rounded-lg bg-white/10 px-4 py-3"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -389,12 +389,12 @@ export default function AdminPage() {
                 <span className="w-8 text-center text-lg font-bold text-zinc-400">
                   {idx + 1}
                 </span>
-                <span className="text-xl">{entry.player_emoji}</span>
+                <span className="text-xl">{entry.emoji}</span>
                 <span className="flex-1 truncate font-medium">
-                  {entry.player_name}
+                  {entry.name}
                 </span>
                 <span className="font-mono font-bold text-[#D89E00]">
-                  {entry.total_score.toLocaleString()}
+                  {entry.score.toLocaleString()}
                 </span>
               </motion.div>
             ))}
@@ -422,7 +422,7 @@ export default function AdminPage() {
     const avgScore =
       leaderboard.length > 0
         ? Math.round(
-            leaderboard.reduce((sum, e) => sum + e.total_score, 0) /
+            leaderboard.reduce((sum, e) => sum + e.score, 0) /
               leaderboard.length
           )
         : 0
@@ -449,18 +449,18 @@ export default function AdminPage() {
             if (!entry) return null
             return (
               <motion.div
-                key={entry.player_id}
+                key={entry.id}
                 className="flex flex-col items-center gap-2"
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.2 }}
               >
-                <span className="text-3xl">{entry.player_emoji}</span>
+                <span className="text-3xl">{entry.emoji}</span>
                 <span className="max-w-[100px] truncate text-center text-sm font-semibold">
-                  {entry.player_name}
+                  {entry.name}
                 </span>
                 <span className="font-mono text-sm font-bold text-[#D89E00]">
-                  {entry.total_score.toLocaleString()}
+                  {entry.score.toLocaleString()}
                 </span>
                 <div
                   className={`${podiumHeights[idx]} w-24 rounded-t-lg`}
@@ -499,7 +499,7 @@ export default function AdminPage() {
           <div className="flex max-h-[400px] flex-col gap-2 overflow-y-auto">
             {leaderboard.map((entry, idx) => (
               <motion.div
-                key={entry.player_id}
+                key={entry.id}
                 className="flex items-center gap-3 rounded-lg bg-white/10 px-4 py-3"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -508,12 +508,12 @@ export default function AdminPage() {
                 <span className="w-8 text-center text-lg font-bold text-zinc-400">
                   {idx + 1}
                 </span>
-                <span className="text-xl">{entry.player_emoji}</span>
+                <span className="text-xl">{entry.emoji}</span>
                 <span className="flex-1 truncate font-medium">
-                  {entry.player_name}
+                  {entry.name}
                 </span>
                 <span className="font-mono font-bold text-[#D89E00]">
-                  {entry.total_score.toLocaleString()}
+                  {entry.score.toLocaleString()}
                 </span>
               </motion.div>
             ))}

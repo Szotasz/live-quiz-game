@@ -75,7 +75,7 @@ export default function PlayerGamePage() {
   }, [])
 
   // Listen for game events
-  useGameChannel(gameId, {
+  const { trackPresence } = useGameChannel(gameId, {
     onGameStart: () => {
       setPhase('waiting')
     },
@@ -85,33 +85,37 @@ export default function PlayerGamePage() {
       setPhase('question')
       startTimer()
     },
-    onResults: (payload: { questionIdx: number }) => {
+    onResults: () => {
       if (timerRef.current) clearInterval(timerRef.current)
       // Fetch rank for this player
       getLeaderboard(gameId).then((lb) => {
-        const entry = lb.find((e: { playerId: string }) => e.playerId === playerId)
-        const playerRank = lb.findIndex((e: { playerId: string }) => e.playerId === playerId) + 1
+        const playerRank = lb.findIndex((e: { id: string }) => e.id === playerId) + 1
+        const entry = lb.find((e: { id: string }) => e.id === playerId)
         if (entry) {
-          setTotalScore(entry.totalScore)
-          setPointsEarned(entry.lastPoints ?? 0)
-          setWasCorrect((entry.lastPoints ?? 0) > 0)
+          setTotalScore(entry.score)
         }
         setRank(playerRank)
         setPhase('result')
       })
-      void payload
     },
     onEnd: () => {
       if (timerRef.current) clearInterval(timerRef.current)
       getLeaderboard(gameId).then((lb) => {
-        const playerRank = lb.findIndex((e: { playerId: string }) => e.playerId === playerId) + 1
-        const entry = lb.find((e: { playerId: string }) => e.playerId === playerId)
-        if (entry) setTotalScore(entry.totalScore)
+        const playerRank = lb.findIndex((e: { id: string }) => e.id === playerId) + 1
+        const entry = lb.find((e: { id: string }) => e.id === playerId)
+        if (entry) setTotalScore(entry.score)
         setRank(playerRank)
         setPhase('finished')
       })
     },
   })
+
+  // Track presence once player info is loaded
+  useEffect(() => {
+    if (playerId && playerName) {
+      trackPresence({ id: playerId, name: playerName, emoji: playerEmoji })
+    }
+  }, [playerId, playerName, playerEmoji, trackPresence])
 
   // Cleanup timer
   useEffect(() => {
@@ -141,6 +145,9 @@ export default function PlayerGamePage() {
     const timeElapsed = (Date.now() - questionStartRef.current) / 1000
     const isCorrect = label === currentQuestion.correctAnswer
 
+    const points = isCorrect ? Math.max(500, Math.round(1000 - (timeElapsed / 15) * 500)) : 0
+    setWasCorrect(isCorrect)
+    setPointsEarned(points)
     setPhase('answered')
 
     try {

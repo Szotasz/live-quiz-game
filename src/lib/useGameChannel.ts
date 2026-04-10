@@ -16,6 +16,7 @@ interface GameHandlers {
 export function useGameChannel(gameId: string, handlers: GameHandlers) {
   const channelRef = useRef<RealtimeChannel | null>(null)
   const handlersRef = useRef(handlers)
+  const pendingPresenceRef = useRef<Record<string, unknown> | null>(null)
   handlersRef.current = handlers
 
   const [presenceState, setPresenceState] = useState<Record<string, unknown[]>>({})
@@ -27,6 +28,17 @@ export function useGameChannel(gameId: string, handlers: GameHandlers) {
         event,
         payload,
       })
+    },
+    []
+  )
+
+  const trackPresence = useCallback(
+    (data: Record<string, unknown>) => {
+      if (channelRef.current) {
+        channelRef.current.track(data)
+      } else {
+        pendingPresenceRef.current = data
+      }
     },
     []
   )
@@ -58,7 +70,16 @@ export function useGameChannel(gameId: string, handlers: GameHandlers) {
         handlersRef.current.onPresenceSync?.(state as Record<string, unknown[]>)
       })
 
-    channel.subscribe()
+    channel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        channelRef.current = channel
+        // If there's pending presence data, track it now
+        if (pendingPresenceRef.current) {
+          channel.track(pendingPresenceRef.current)
+          pendingPresenceRef.current = null
+        }
+      }
+    })
     channelRef.current = channel
 
     return () => {
@@ -67,5 +88,5 @@ export function useGameChannel(gameId: string, handlers: GameHandlers) {
     }
   }, [gameId])
 
-  return { channel: channelRef.current, presenceState, broadcast }
+  return { channel: channelRef.current, presenceState, broadcast, trackPresence }
 }
