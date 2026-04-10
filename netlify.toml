@@ -2,5 +2,11 @@
   command = "npm run build"
   publish = ".next"
 
+[build.environment]
+  NODE_VERSION = "20"
+  NEXT_PUBLIC_SUPABASE_URL = "https://ngioqhbeeviursajjiqa.supabase.co"
+  NEXT_PUBLIC_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5naW9xaGJlZXZpdXJzYWpqaXFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4Mjg0MTcsImV4cCI6MjA5MTQwNDQxN30.wBg40XJLGufR04nlYfbKah-ZtOFSMmxI_-hjTiopzi0"
+  NEXT_PUBLIC_APP_URL = "https://live-quiz-game.netlify.app"
+
 [[plugins]]
   package = "@netlify/plugin-nextjs"
