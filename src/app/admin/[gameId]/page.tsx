@@ -130,6 +130,7 @@ export default function AdminPage() {
   const handleStartGame = useCallback(async () => {
     await startGame(gameId)
     broadcast('game:start', {})
+    broadcast('game:question', { questionIdx: 0 })
     setQuestionIdx(0)
     setGameStatus('question')
   }, [gameId, broadcast])
