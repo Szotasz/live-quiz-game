@@ -1,26 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Bankmonitor brand */
+  --bm-primary: #FA4616;
+  --bm-primary-hover: #E03E12;
+  --bm-primary-light: #FD7E14;
+  --bm-secondary: #72246C;
+  --bm-text: #444444;
+  --bm-text-dark: #211F1E;
+  --bm-bg: #FFFFFF;
+  --bm-bg-alt: #F8F9FA;
+  --bm-footer-bg: #343A40;
+  --bm-orange-gradient: linear-gradient(135deg, #FA4616 0%, #FD7E14 100%);
+  --bm-hero-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+
+  /* Quiz answer palette (Bankmonitor-aligned) */
+  --answer-a: #FA4616; /* Bankmonitor orange */
+  --answer-b: #72246C; /* Bankmonitor purple */
+  --answer-c: #0B5ED7; /* Blue */
+  --answer-d: #198754; /* Green */
+
+  --background: var(--bm-bg);
+  --foreground: var(--bm-text);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: 'Open Sans', Roboto, Arial, sans-serif;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: 'Open Sans', Roboto, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }

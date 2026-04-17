@@ -11,10 +11,10 @@ import confetti from 'canvas-confetti'
 type Phase = 'waiting' | 'question' | 'answered' | 'result' | 'finished'
 
 const ANSWER_COLORS: Record<string, string> = {
-  A: '#E21B3C',
-  B: '#1368CE',
-  C: '#26890C',
-  D: '#D89E00',
+  A: '#FA4616', // Bankmonitor orange
+  B: '#72246C', // Bankmonitor purple
+  C: '#0B5ED7', // Blue
+  D: '#198754', // Green
 }
 
 const ANSWER_ICONS: Record<string, string> = {
@@ -23,6 +23,9 @@ const ANSWER_ICONS: Record<string, string> = {
   C: '●',
   D: '■',
 }
+
+const HERO_BG =
+  'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)'
 
 export default function PlayerGamePage() {
   const { gameId } = useParams<{ gameId: string }>()
@@ -39,9 +42,9 @@ export default function PlayerGamePage() {
 
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const questionStartRef = useRef<number>(Date.now())
-  const playerId = typeof window !== 'undefined' ? sessionStorage.getItem('playerId') ?? '' : ''
+  const playerId =
+    typeof window !== 'undefined' ? sessionStorage.getItem('playerId') ?? '' : ''
 
-  // Load player info
   useEffect(() => {
     if (!playerId) return
     import('@/lib/supabase').then(({ supabase }) => {
@@ -74,7 +77,6 @@ export default function PlayerGamePage() {
     }, 1000)
   }, [])
 
-  // Listen for game events
   const { trackPresence } = useGameChannel(gameId, {
     onGameStart: () => {
       setPhase('waiting')
@@ -87,13 +89,10 @@ export default function PlayerGamePage() {
     },
     onResults: () => {
       if (timerRef.current) clearInterval(timerRef.current)
-      // Fetch rank for this player
       getLeaderboard(gameId).then((lb) => {
         const playerRank = lb.findIndex((e: { id: string }) => e.id === playerId) + 1
         const entry = lb.find((e: { id: string }) => e.id === playerId)
-        if (entry) {
-          setTotalScore(entry.score)
-        }
+        if (entry) setTotalScore(entry.score)
         setRank(playerRank)
         setPhase('result')
       })
@@ -110,27 +109,25 @@ export default function PlayerGamePage() {
     },
   })
 
-  // Track presence once player info is loaded
   useEffect(() => {
     if (playerId && playerName) {
       trackPresence({ id: playerId, name: playerName, emoji: playerEmoji })
     }
   }, [playerId, playerName, playerEmoji, trackPresence])
 
-  // Cleanup timer
   useEffect(() => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [])
 
-  // Confetti for top 3 on finish
   useEffect(() => {
     if (phase === 'finished' && rank > 0 && rank <= 3) {
       confetti({
         particleCount: 150,
         spread: 80,
         origin: { y: 0.6 },
+        colors: ['#FA4616', '#FD7E14', '#72246C', '#ffffff'],
       })
     }
   }, [phase, rank])
@@ -145,7 +142,9 @@ export default function PlayerGamePage() {
     const timeElapsed = (Date.now() - questionStartRef.current) / 1000
     const isCorrect = label === currentQuestion.correctAnswer
 
-    const points = isCorrect ? Math.max(500, Math.round(1000 - (timeElapsed / 15) * 500)) : 0
+    const points = isCorrect
+      ? Math.max(500, Math.round(1000 - (timeElapsed / 15) * 500))
+      : 0
     setWasCorrect(isCorrect)
     setPointsEarned(points)
     setPhase('answered')
@@ -157,29 +156,36 @@ export default function PlayerGamePage() {
     }
   }
 
-  // WAITING phase
+  // ─── WAITING ───────────────────────────────────────
   if (phase === 'waiting') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-700 via-purple-600 to-blue-600 flex flex-col items-center justify-center p-6">
+      <div
+        className="flex min-h-screen flex-col items-center justify-center p-6"
+        style={{ background: HERO_BG }}
+      >
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           className="text-center"
         >
-          <div className="text-7xl mb-4">{playerEmoji || '🎮'}</div>
-          <h1 className="text-3xl font-bold text-white mb-2">{playerName || 'Player'}</h1>
+          <div className="mb-4 text-7xl">{playerEmoji || '🎮'}</div>
+          <h1 className="mb-2 text-3xl font-extrabold text-white">
+            {playerName || 'Játékos'}
+          </h1>
           <motion.p
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 2, repeat: Infinity }}
-            className="text-purple-200 text-lg"
+            className="text-lg"
+            style={{ color: '#FD7E14' }}
           >
-            Waiting for game to start...
+            Várunk a kezdésre…
           </motion.p>
           <div className="mt-8 flex justify-center gap-1">
             {[0, 1, 2].map((i) => (
               <motion.div
                 key={i}
-                className="w-3 h-3 bg-yellow-400 rounded-full"
+                className="h-3 w-3 rounded-full"
+                style={{ background: '#FA4616' }}
                 animate={{ y: [0, -12, 0] }}
                 transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
               />
@@ -190,47 +196,54 @@ export default function PlayerGamePage() {
     )
   }
 
-  // QUESTION phase
+  // ─── QUESTION ───────────────────────────────────────
   if (phase === 'question' && currentQuestion) {
     return (
-      <div className="min-h-screen bg-gray-900 flex flex-col">
+      <div className="flex min-h-screen flex-col bg-gray-900">
         {/* Timer bar */}
-        <div className="p-3 flex items-center justify-between bg-gray-800">
-          <div className="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden mr-3">
+        <div
+          className="flex items-center justify-between p-3"
+          style={{ background: '#0f3460' }}
+        >
+          <div className="mr-3 h-2 flex-1 overflow-hidden rounded-full bg-white/10">
             <motion.div
-              className="h-full bg-yellow-400 rounded-full"
+              className="h-full rounded-full"
+              style={{ background: timeLeft > 5 ? '#FD7E14' : '#FA4616' }}
               initial={{ width: '100%' }}
               animate={{ width: `${(timeLeft / 15) * 100}%` }}
               transition={{ duration: 1, ease: 'linear' }}
             />
           </div>
           <span
-            className={`text-2xl font-bold min-w-[2ch] text-right ${
-              timeLeft <= 5 ? 'text-red-400' : 'text-white'
+            className={`min-w-[2ch] text-right text-2xl font-bold ${
+              timeLeft <= 5 ? 'text-white' : 'text-white'
             }`}
+            style={timeLeft <= 5 ? { color: '#FA4616' } : undefined}
           >
             {timeLeft}
           </span>
         </div>
 
         {/* Question text */}
-        <div className="px-4 py-3 bg-gray-800/50">
-          <p className="text-white text-center text-lg font-semibold leading-snug">
+        <div className="bg-gray-800/50 px-4 py-3">
+          <p className="text-center text-lg font-semibold leading-snug text-white">
             {currentQuestion.text}
           </p>
         </div>
 
         {/* Answer buttons */}
-        <div className="flex-1 p-3 grid grid-rows-4 gap-3">
+        <div className="grid flex-1 grid-rows-4 gap-3 p-3">
           {currentQuestion.options.map((option) => (
             <motion.button
               key={option.label}
               whileTap={{ scale: 0.95 }}
               onClick={() => handleAnswer(option.label)}
-              className="w-full rounded-xl text-white font-bold text-lg flex items-center gap-3 px-5 shadow-lg active:brightness-90"
+              className="flex w-full items-center gap-3 rounded-xl px-5 text-lg font-bold text-white shadow-lg active:brightness-90"
               style={{ backgroundColor: ANSWER_COLORS[option.label] }}
             >
-              <span className="text-2xl opacity-70">{ANSWER_ICONS[option.label]}</span>
+              <span className="text-2xl opacity-70">
+                {ANSWER_ICONS[option.label]}
+              </span>
               <span className="flex-1 text-left">{option.text}</span>
             </motion.button>
           ))}
@@ -239,10 +252,13 @@ export default function PlayerGamePage() {
     )
   }
 
-  // ANSWERED subphase
+  // ─── ANSWERED ───────────────────────────────────────
   if (phase === 'answered') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-800 to-gray-900 flex flex-col items-center justify-center p-6">
+      <div
+        className="flex min-h-screen flex-col items-center justify-center p-6"
+        style={{ background: HERO_BG }}
+      >
         <motion.div
           initial={{ scale: 0, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
@@ -250,18 +266,23 @@ export default function PlayerGamePage() {
           className="text-center"
         >
           <div
-            className="w-24 h-24 rounded-full flex items-center justify-center mx-auto mb-4"
+            className="mx-auto mb-4 flex h-24 w-24 items-center justify-center rounded-full"
             style={{ backgroundColor: ANSWER_COLORS[selectedAnswer ?? 'A'] }}
           >
-            <span className="text-4xl text-white">{ANSWER_ICONS[selectedAnswer ?? 'A']}</span>
+            <span className="text-4xl text-white">
+              {ANSWER_ICONS[selectedAnswer ?? 'A']}
+            </span>
           </div>
-          <h2 className="text-3xl font-bold text-white mb-2">Answer sent!</h2>
-          <p className="text-gray-400 text-lg">Waiting for results...</p>
+          <h2 className="mb-2 text-3xl font-extrabold text-white">
+            Válasz elküldve!
+          </h2>
+          <p className="text-lg text-white/60">Várunk az eredményre…</p>
           <div className="mt-6 flex justify-center gap-1">
             {[0, 1, 2].map((i) => (
               <motion.div
                 key={i}
-                className="w-2.5 h-2.5 bg-gray-500 rounded-full"
+                className="h-2.5 w-2.5 rounded-full"
+                style={{ background: '#FD7E14' }}
                 animate={{ opacity: [0.3, 1, 0.3] }}
                 transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
               />
@@ -272,10 +293,13 @@ export default function PlayerGamePage() {
     )
   }
 
-  // RESULT phase
+  // ─── RESULT ───────────────────────────────────────
   if (phase === 'result') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-800 to-gray-900 flex flex-col items-center justify-center p-6">
+      <div
+        className="flex min-h-screen flex-col items-center justify-center p-6"
+        style={{ background: HERO_BG }}
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key="result"
@@ -285,23 +309,22 @@ export default function PlayerGamePage() {
             transition={{ type: 'spring', stiffness: 200, damping: 20 }}
             className="text-center"
           >
-            {/* Correct / Incorrect */}
             <motion.div
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: 'spring', stiffness: 300, damping: 15, delay: 0.1 }}
-              className={`w-28 h-28 rounded-full flex items-center justify-center mx-auto mb-6 ${
-                wasCorrect ? 'bg-green-500' : 'bg-red-500'
-              }`}
+              className="mx-auto mb-6 flex h-28 w-28 items-center justify-center rounded-full"
+              style={{ background: wasCorrect ? '#198754' : '#FA4616' }}
             >
-              <span className="text-5xl text-white">{wasCorrect ? '✓' : '✗'}</span>
+              <span className="text-5xl text-white">
+                {wasCorrect ? '✓' : '✗'}
+              </span>
             </motion.div>
 
-            <h2 className="text-2xl font-bold text-white mb-4">
-              {wasCorrect ? 'Correct!' : 'Incorrect'}
+            <h2 className="mb-4 text-2xl font-bold text-white">
+              {wasCorrect ? 'Helyes!' : 'Nem jó'}
             </h2>
 
-            {/* Points */}
             <motion.div
               initial={{ scale: 0.5, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -309,24 +332,27 @@ export default function PlayerGamePage() {
               className="mb-4"
             >
               <span
-                className={`text-4xl font-extrabold ${
-                  wasCorrect ? 'text-green-400' : 'text-gray-500'
-                }`}
+                className="text-4xl font-extrabold"
+                style={{ color: wasCorrect ? '#FD7E14' : '#6b7280' }}
               >
                 +{pointsEarned}
               </span>
-              <p className="text-gray-400 text-sm mt-1">points</p>
+              <p className="mt-1 text-sm text-white/60">pont</p>
             </motion.div>
 
-            {/* Rank */}
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.5 }}
-              className="bg-white/10 backdrop-blur-sm rounded-xl px-6 py-3 inline-block"
+              className="inline-block rounded-xl border border-white/10 bg-white/5 px-6 py-3 backdrop-blur-sm"
             >
-              <span className="text-yellow-400 text-3xl font-bold">#{rank}</span>
-              <p className="text-gray-400 text-xs mt-1">current rank</p>
+              <span
+                className="text-3xl font-bold"
+                style={{ color: '#FD7E14' }}
+              >
+                #{rank}
+              </span>
+              <p className="mt-1 text-xs text-white/60">jelenlegi helyezés</p>
             </motion.div>
           </motion.div>
         </AnimatePresence>
@@ -334,52 +360,55 @@ export default function PlayerGamePage() {
     )
   }
 
-  // FINISHED phase
+  // ─── FINISHED ───────────────────────────────────────
   if (phase === 'finished') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-700 via-purple-600 to-blue-600 flex flex-col items-center justify-center p-6">
+      <div
+        className="flex min-h-screen flex-col items-center justify-center p-6"
+        style={{ background: HERO_BG }}
+      >
         <motion.div
           initial={{ scale: 0.8, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ type: 'spring', stiffness: 200, damping: 15 }}
           className="text-center"
         >
-          {/* Rank */}
           <motion.div
             initial={{ y: -30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2 }}
-            className={`text-8xl font-extrabold mb-4 ${
-              rank <= 3 ? 'text-yellow-400' : 'text-white'
-            }`}
+            className="mb-4 text-8xl font-black"
+            style={{ color: rank <= 3 ? '#FD7E14' : '#ffffff' }}
           >
             #{rank}
           </motion.div>
 
-          {/* Medal for top 3 */}
-          {rank === 1 && <div className="text-6xl mb-4">🥇</div>}
-          {rank === 2 && <div className="text-6xl mb-4">🥈</div>}
-          {rank === 3 && <div className="text-6xl mb-4">🥉</div>}
+          {rank === 1 && <div className="mb-4 text-6xl">🥇</div>}
+          {rank === 2 && <div className="mb-4 text-6xl">🥈</div>}
+          {rank === 3 && <div className="mb-4 text-6xl">🥉</div>}
 
-          {/* Score */}
           <motion.div
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ delay: 0.4 }}
             className="mb-6"
           >
-            <p className="text-purple-200 text-sm uppercase tracking-wider mb-1">Total Score</p>
-            <p className="text-5xl font-extrabold text-white">{totalScore.toLocaleString()}</p>
+            <p className="mb-1 text-sm uppercase tracking-wider text-white/60">
+              Összes pontszám
+            </p>
+            <p className="text-5xl font-extrabold text-white">
+              {totalScore.toLocaleString('hu-HU')}
+            </p>
           </motion.div>
 
-          {/* Thank you */}
           <motion.p
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
-            className="text-purple-200 text-lg"
+            className="text-lg"
+            style={{ color: '#FD7E14' }}
           >
-            Thanks for playing! 🎉
+            Köszi, hogy játszottál! 🎉
           </motion.p>
         </motion.div>
       </div>
